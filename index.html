@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Sudoku Style Game</title>
+
+</head>
+<style>
+
+    body {
+        font-size: 0;
+    }
+
+    .square {
+        display: inline-block;
+        width: 100px;
+        height: 100px;
+        border: 2px solid black;
+        box-sizing: border-box;
+        background-color: white;
+    }
+
+    #gameGrid {
+        width: 400px;
+    }
+
+</style>
+<script src="https://code.jquery.com/jquery-3.1.0.js"></script>
+<script>
+    let game = null;
+
+    class Game {
+        constructor(size) {
+            this.size = size;
+            this.Arrays = class Arrays {
+                constructor() {
+                    this.rowArr4 = ['orange','black','blue', 'white'];
+                    this.rowArr5 = ['orange','black','blue', 'white', 'white'];
+                    this.rowArr6 = ['orange','black','blue', 'white', 'white', 'white'];
+                    this.numArr4 = [1, 2, 3, 4];
+                    this.numArr5 = [1, 2, 3, 4, 5];
+                    this.numArr6 = [1, 2, 3, 4, 5, 6];
+                }
+            };
+        }
+        init() {
+            this.createGrid();
+            this.callRandomizeRequiredColors();
+        }
+        createGrid() {
+            for (let i = 1; i <= this.size; i++) {
+                for (let k = 1; k <= this.size; k++) {
+                    let square = $('<div>').attr('id',`square${i}x${k}`).attr('currentColor','white').attr('requiredColor','').addClass('square');
+                    $('#gameGrid').append(square);
+                }
+            }
+        }
+        callRandomizeRequiredColors() {
+            for (let i = 1; i <= this.size; i++) {
+                this.randomizeRequiredColors(new this.Arrays, i);
+            }
+        }
+        randomizeRequiredColors(arrays, startingRow) {
+            let rowArr = arrays[`rowArr${this.size}`] ;
+            let numArr = arrays[`numArr${this.size}`];
+            while (rowArr.length > 0) {
+               let randomRowNum = Math.floor(Math.random() * rowArr.length);
+               let randomNumNum = Math.floor(Math.random() * numArr.length);
+               $(`#square${startingRow}x${numArr[randomNumNum]}`).attr('requiredColor',`${rowArr[randomRowNum]}`);
+               rowArr.splice(randomRowNum, 1);
+               numArr.splice(randomNumNum, 1);
+            }
+        }
+        checkAbove(column, color) {
+            for (i = column - 1; i > 0; i--) {
+
+            }
+        }
+    }
+
+    $(document).ready(function(){
+        console.log('Loaded');
+        game = new Game(4);
+    })
+</script>
+<body>
+    <div id="gameGrid">
+    </div>
+</body>
+</html>
