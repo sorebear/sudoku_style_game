@@ -6,22 +6,37 @@
 
 </head>
 <style>
-
+    * {
+        box-sizing: border-box;
+    }
     body {
         font-size: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 95vh;
     }
 
     .square {
         display: inline-block;
-        width: 100px;
-        height: 100px;
-        border: 2px solid black;
-        box-sizing: border-box;
+        width: 16%;
+        height: 16%;
+        border: 1px solid black;
         background-color: white;
     }
 
+    .perimeterSquare {
+        display: inline-block;
+        width: 16%;
+        height: 16%;
+        border-radius: 100%;
+        border: 5px solid white;
+    }
+
     #gameGrid {
-        width: 400px;
+        width: 80vmin;
+        height: 80vmin;
+        margin: 0;
     }
 
 </style>
@@ -30,57 +45,199 @@
     let game = null;
 
     class Game {
-        constructor(size) {
-            this.size = size;
-            this.Arrays = class Arrays {
-                constructor() {
-                    this.rowArr4 = ['orange','black','blue', 'white'];
-                    this.rowArr5 = ['orange','black','blue', 'white', 'white'];
-                    this.rowArr6 = ['orange','black','blue', 'white', 'white', 'white'];
-                    this.numArr4 = [1, 2, 3, 4];
-                    this.numArr5 = [1, 2, 3, 4, 5];
-                    this.numArr6 = [1, 2, 3, 4, 5, 6];
-                }
-            };
+        constructor(gridSize, numOfClues) {
+            this.size = gridSize;
+            this.gridArray = null;
+            this.colorRotation4 = ['#d38508', '#222', 'deepskyblue', 'white'];
+            this.colors = ['#d38508', '#222', 'deepskyblue', 'white'];
+            this.numOfClues = numOfClues;
         }
+
         init() {
             this.createGrid();
+            this.createGridArray();
             this.callRandomizeRequiredColors();
+            this.createClues();
         }
+
         createGrid() {
-            for (let i = 1; i <= this.size; i++) {
-                for (let k = 1; k <= this.size; k++) {
+            for (let i = 0; i <= this.size + 1; i++) {
+                for (let k = 0; k <= this.size + 1; k++) {
                     let square = $('<div>').attr('id',`square${i}x${k}`).attr('currentColor','white').attr('requiredColor','').addClass('square');
                     $('#gameGrid').append(square);
                 }
             }
+            this.removeCorners()
+        }
+
+        createArrayOfNumbersFromTotalSize() {
+            let arr = [];
+            for (let i = 1; i <= this.size; i++) {
+                arr.push(i)
+            }
+            return arr;
+        }
+
+        createYesOrNoArray(numOfYes) {
+            let yesOrNoArray = [];
+            let numOfNo = this.size * 4 - numOfYes;
+            for (let i = 0; i < numOfNo; i++) {
+                yesOrNoArray.push(0);
+            }
+            for (let k = 0; k < numOfYes; k++) {
+                yesOrNoArray.push(1);
+            }
+            return yesOrNoArray;
+        }
+
+        randomizeArray(array) {
+            let randomizedArray = [];
+            while (array.length > 0) {
+                let randomNum = Math.floor(Math.random() * array.length);
+                randomizedArray.push(array.splice(randomNum, 1)[0]);
+            }
+            return randomizedArray;
+        }
+
+        removeCorners() {
+            $(`#square0x0`).addClass('perimeterSquare').removeClass('square');
+            $(`#square0x${this.size + 1}`).addClass('perimeterSquare').removeClass('square');
+            $(`#square${this.size + 1}x0`).addClass('perimeterSquare').removeClass('square');
+            $(`#square${this.size + 1}x${this.size + 1}`).addClass('perimeterSquare').removeClass('square');
+        }
+
+        createClues() {
+            let yesOrNoArray = this.randomizeArray(this.createYesOrNoArray(this.numOfClues));
+            for (let i = 1; i <= this.size; i++) {
+                if (yesOrNoArray[0]) {
+                    let color = this.findFirstColorVertical(0, i, 1);
+                    $(`#square0x${i}`).css('background-color', color);
+                }
+                $(`#square0x${i}`).addClass('perimeterSquare').removeClass('square');
+                yesOrNoArray.splice(0,1);
+                if (yesOrNoArray[0]) {
+                    let color = this.findFirstColorHorizontal(i, 0, 1);
+                    $(`#square${i}x0`).css('background-color', color);
+                }
+                $(`#square${i}x0`).addClass('perimeterSquare').removeClass('square');
+                yesOrNoArray.splice(0,1);
+                if (yesOrNoArray[0]) {
+                    let color = this.findFirstColorHorizontal(i, (this.size + 1), -1);
+                    $(`#square${i}x${this.size + 1}`).css('background-color', color);
+                }
+                $(`#square${i}x${this.size + 1}`).addClass('perimeterSquare').removeClass('square');
+                yesOrNoArray.splice(0,1);
+                if (yesOrNoArray[0]) {
+                    let color = this.findFirstColorVertical((this.size + 1), i, -1);
+                    $(`#square${this.size + 1}x${i}`).css('background-color', color);
+                }
+                $(`#square${this.size + 1}x${i}`).addClass('perimeterSquare').removeClass('square');
+                yesOrNoArray.splice(0,1);
+            }
+        }
+
+        findFirstColorVertical(row, column, modifier) {
+            let targetTile = null;
+            do {
+                row += modifier;
+                targetTile = $(`#square${row}x${column}`);
+            }
+            while (targetTile.attr('requiredColor') === 'white');
+            return targetTile.attr('requiredColor');
+        }
+
+        findFirstColorHorizontal(row, column, modifier) {
+            let targetTile = null;
+            do {
+                column += modifier;
+                targetTile = $(`#square${row}x${column}`);
+            }
+            while (targetTile.attr('requiredColor') === 'white');
+            return targetTile.attr('requiredColor');
+        }
+
+        createGridArray() {
+            let gridArray = [];
+            for (let i = 1; i <= this.size; i++) {
+                gridArray.push([]);
+                for (let k = 1; k <= this.size; k++) {
+                    gridArray[i - 1].push(`square${i}x${k}`);
+                }
+            }
+            this.gridArray = gridArray;
         }
         callRandomizeRequiredColors() {
-            for (let i = 1; i <= this.size; i++) {
-                this.randomizeRequiredColors(new this.Arrays, i);
+            for (let i = 0; i < this.colors.length; i++) {
+                this.colorTiles(i);
             }
         }
-        randomizeRequiredColors(arrays, startingRow) {
-            let rowArr = arrays[`rowArr${this.size}`] ;
-            let numArr = arrays[`numArr${this.size}`];
-            while (rowArr.length > 0) {
-               let randomRowNum = Math.floor(Math.random() * rowArr.length);
-               let randomNumNum = Math.floor(Math.random() * numArr.length);
-               $(`#square${startingRow}x${numArr[randomNumNum]}`).attr('requiredColor',`${rowArr[randomRowNum]}`);
-               rowArr.splice(randomRowNum, 1);
-               numArr.splice(randomNumNum, 1);
-            }
-        }
-        checkAbove(column, color) {
-            for (i = column - 1; i > 0; i--) {
 
+        colorTiles(currentIteration) {
+            let color = this.colors[currentIteration];
+            let tilesToColor = this.randomizeRequiredColors();
+            for (let i = 0; i < tilesToColor.length; i++) {
+                $(`#${tilesToColor[i]}`).attr('requiredColor', color);
             }
         }
+
+        randomizeRequiredColors() {
+            let selectedTargets = [];
+            let rowNumArray = this.createArrayOfNumbersFromTotalSize();
+            let columnNumArray = this.createArrayOfNumbersFromTotalSize();
+            let maxTries = 0;
+            let tilesToChange = [];
+            while (rowNumArray.length > 0) {
+                let randomColumnNum = Math.floor(Math.random() * columnNumArray.length);
+                if (this.gridArray[rowNumArray[0] - 1][columnNumArray[randomColumnNum] - 1]) {
+                    selectedTargets.push([[rowNumArray[0] - 1][0],[columnNumArray[randomColumnNum] - 1][0]]);
+//                    let targetSquare = this.gridArray[rowNumArray[0] - 1].splice([columnNumArray[randomColumnNum] - 1], 1, "");
+                    rowNumArray.splice(0, 1);
+                    columnNumArray.splice(randomColumnNum, 1);
+                } else {
+                    maxTries++;
+                    if (maxTries > 5) {
+                        console.log("I reached the max, I'm trying again");
+                        return this.randomizeRequiredColors();
+                    }
+                }
+            }
+            for (let i = 0; i < selectedTargets.length; i++) {
+                tilesToChange.push(this.gridArray[selectedTargets[i][0]].splice(selectedTargets[i][1], 1, "")[0])
+            }
+            return tilesToChange;
+        }
+
+        changeTileColor(elementClicked) {
+            let currentColor = $(elementClicked).attr('currentColor');
+            let index = this[`colorRotation${this.size}`].indexOf(currentColor) + 1;
+            if (index === this.size) { index = 0 }
+            let newColor = this[`colorRotation${this.size}`][index];
+            $(elementClicked).attr('currentColor',newColor).css('background-color',newColor);
+        }
+
+        checkForWinConditions() {
+            for (let row = 1; row <= this.size; row++) {
+                for (let column = 1; column <= this.size; column++) {
+                    let targetTile = ($(`#square${row}x${column}`));
+                    if (targetTile.attr('currentColor') !== targetTile.attr('requiredColor')) {
+                        console.log('You have not won');
+                        return;
+                    }
+                }
+            }
+            console.log('You Win!')
+        }
+
     }
 
     $(document).ready(function(){
         console.log('Loaded');
-        game = new Game(4);
+        game = new Game(4, 8);
+        game.init();
+        $('#gameGrid').on('click', '.square', function() {
+            game.changeTileColor(this);
+            game.checkForWinConditions();
+        });
     })
 </script>
 <body>
